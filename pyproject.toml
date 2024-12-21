@@ -1,24 +1,38 @@
 [tool.poetry]
-name = "otus-python-pro-lecture1"
+name = "log-analyser"
 version = "0.1.0"
-description = "Lecture 1 project for OTUS Python Pro course"
-authors = ["Stanislav Stupnikov <st.stupnikov@gmail.com>"]
+description = "parser nginx logs"
+authors = ["Andrey Sorokin"]
+license = "MIT"
 readme = "README.md"
 package-mode = false
 
+[tool.ruff]
+select = ["E", "W", "F"]
+ignore = ["E501"]
+line-length = 88
+include = ["*.py"]
+exclude = ["tests"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.black]
+line-length = 88
+include = '\.pyi?$'
+exclude = "tests"
+
 [tool.poetry.dependencies]
 python = "^3.12"
+structlog = "^24.4.0"
+
 
 [tool.poetry.group.dev.dependencies]
-black = "^24.4.2"
-flake8 = "^7.0.0"
+pytest = "^8.3.4"
 isort = "^5.13.2"
-mypy = "^1.10.0"
-pre-commit = "^3.7.1"
-pytest = "^8.2.1"
-pyupgrade = "^3.15.2"
-ruff = "^0.4.6"
-uv = "^0.2.5"
+black = "^24.10.0"
+ruff = "^0.8.4"
 
 [build-system]
 requires = ["poetry-core"]

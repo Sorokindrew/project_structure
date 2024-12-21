@@ -1,20 +1,33 @@
 import argparse
-from pathlib import Path
-from src.app.module import read_file, get_latest
+
+from src.app.module import parse_logs
+
 
 def get_config():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--config",
         required=False,
-        type=Path,
-        default=Path.joinpath(Path.cwd(), "config.py"),
+        type=str,
+        default="config",
     )
     args = parser.parse_args()
-    print(args.config)
+    config = {"REPORT_SIZE": 1000, "REPORT_DIR": "./reports", "LOG_DIR": "./log"}
+    with open(args.config, "r") as f:
+        for line in f:
+            key, value = line.split(":", maxsplit=1)
+            match key:
+                case "REPORT_SIZE":
+                    config["REPORT_SIZE"] = int(value.strip())
+                case "REPORT_DIR":
+                    config["REPORT_DIR"] = value.strip()[1:-1]
+                case "LOG_DIR":
+                    config["LOG_DIR"] = value.strip()[1:-1]
+                case "APP_LOGS":
+                    config["APP_LOGS"]
+    return config
 
-if __name__ == '__main__':
-    get_config()
-    file = get_latest()
-    print(file)
-    read_file(file)
+
+if __name__ == "__main__":
+    config = get_config()
+    parse_logs(config)
