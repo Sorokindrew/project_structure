@@ -5,8 +5,17 @@ from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Tuple
+import logging
 
-__all__ = "parse_logs"
+__all__ = ("parse_logs",)
+
+from xml.sax.saxutils import escape
+
+logger = logging.getLogger("parse_logger")
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+)
 
 
 def parse_logs(config: Dict) -> None:
@@ -15,6 +24,11 @@ def parse_logs(config: Dict) -> None:
     log_folder = Path(config["LOG_DIR"]).absolute()
     report_folder = Path(config["REPORT_DIR"]).absolute()
     file, date = get_latest(log_folder)
+    logger.info(f"latest log: {file}")
+    for report in report_folder.iterdir():
+        if report.stem.endswith(date.strftime("%Y.%m.%d")):
+            logger.info("report already presents for latest log")
+            return
     table_json = read_file(file, config)
     create_report(table_json, date, report_folder)
 
@@ -47,21 +61,11 @@ def read_file(file: str, config):
     total_count = 0
     time_total = 0
     if file_path.suffix == ".gz":
-        with gzip.open(file_path) as f:
-            for line in f:
-                data = line.decode().split()
-                request_time = float(data[-1])
-                total_count += 1
-                time_total += request_time
-                statistic[data[6]].append(request_time)
+        with gzip.open(file_path, 'rt') as f:
+            total_count, time_total = _parse_file(f, statistic, total_count, time_total)
     else:
         with open(file_path) as f:
-            for line in f:
-                data = line.split()
-                request_time = float(data[-1])
-                total_count += 1
-                time_total += request_time
-                statistic[data[6]].append(request_time)
+            total_count, time_total = _parse_file(f, statistic, total_count, time_total)
     return _calc_statistic(statistic, total_count, time_total, config["REPORT_SIZE"])
 
 
@@ -92,3 +96,19 @@ def _calc_statistic(data: Dict, total_count: int, time_total: float, qty: int) -
             }
         )
     return json.dumps(sorted(result, key=lambda x: x["time_sum"], reverse=True)[:qty])
+
+def _parse_file(file, statistic, total_count, time_total):
+
+    for line in file:
+        try:
+            data = line.split()
+            request_time = float(data[-1])
+            total_count += 1
+            time_total += request_time
+            statistic[data[6]].append(request_time)
+        except KeyError:
+            logger.info(
+                f"could not parse string {line}. this string skipped."
+            )
+            continue
+    return total_count, time_total

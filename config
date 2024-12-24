@@ -1,4 +1,3 @@
 REPORT_SIZE: 10
 REPORT_DIR: "./reports"
 LOG_DIR: "./logs"
-APP_LOGS: "./app_logs"

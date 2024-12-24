@@ -1,5 +1,4 @@
 import argparse
-
 from src.app.module import parse_logs
 
 
